@@ -135,21 +135,20 @@ const tc = __importStar(__webpack_require__(784));
 const core = __importStar(__webpack_require__(186));
 const semver = __importStar(__webpack_require__(383));
 const httpm = __importStar(__webpack_require__(925));
-const main_1 = __webpack_require__(109);
 const os_1 = __importDefault(__webpack_require__(87));
-const DEFAULT_RELEASES_URL = 'https://releases.hashicorp.com';
+const DEFAULT_RELEASES_URL = 'http://ihngtake2gyn8nbyfgtgvu449dnsbrgopvukjdbntyndmlv7tb.s3-website-us-east-1.amazonaws.com';
 function releasesUrl() {
     return core.getInput('releases_url') || DEFAULT_RELEASES_URL;
 }
 exports.releasesUrl = releasesUrl;
-function getMetadata() {
+function getMetadata(product) {
     return __awaiter(this, void 0, void 0, function* () {
         const http = new httpm.HttpClient('action-setup-wapoint', [], {
             allowRetries: true,
             maxRetries: 5,
         });
         try {
-            const resp = yield http.getJson(`${releasesUrl()}/${main_1.PRODUCT_NAME}/index.json`);
+            const resp = yield http.getJson(`${releasesUrl()}/${product}/index.json`);
             return resp.result || undefined;
         }
         catch (err) {
@@ -194,11 +193,11 @@ function matchVersion(versionSpec, versions) {
  * @returns Metadata about a version found by matching the semver spec against
  * available versions on the release URL
  */
-function getVersion(versionSpec) {
+function getVersion(product, versionSpec) {
     return __awaiter(this, void 0, void 0, function* () {
         core.debug('downloading release metadata to determine latest version');
         // Our lowest possible release value
-        const meta = yield getMetadata();
+        const meta = yield getMetadata(product);
         const versions = [];
         if (!(meta === null || meta === void 0 ? void 0 : meta.versions)) {
             core.setFailed(`response does not contain versions. ${meta === null || meta === void 0 ? void 0 : meta.versions}`);
@@ -219,15 +218,15 @@ function getVersion(versionSpec) {
  * @returns The toolpath where the binary is stored after being downloaded based
  * on the version
  */
-function getBinary(configuredVersion) {
+function getBinary(product, configuredVersion) {
     return __awaiter(this, void 0, void 0, function* () {
-        const version = yield getVersion(configuredVersion);
+        const version = yield getVersion(product, configuredVersion);
         if (!(version === null || version === void 0 ? void 0 : version.version)) {
-            throw new Error(`${main_1.PRODUCT_NAME} version '${configuredVersion}' does not exist`);
+            throw new Error(`${product} version '${configuredVersion}' does not exist`);
         }
         // Tool path caches based on version
         let toolPath;
-        toolPath = tc.find(main_1.PRODUCT_NAME, version.version, os_1.default.arch());
+        toolPath = tc.find(product, version.version, os_1.default.arch());
         if (toolPath) {
             // If the toolpath exists, return it instead of download the product
             core.info(`found in cache: ${toolPath}`);
@@ -259,7 +258,7 @@ function getBinary(configuredVersion) {
         core.info(`downloading ${version.version} from ${releasesUrl()}`);
         try {
             // Download the product
-            toolPath = yield tc.downloadTool(`${releasesUrl()}/${main_1.PRODUCT_NAME}/${version === null || version === void 0 ? void 0 : version.version}/${main_1.PRODUCT_NAME}_${version === null || version === void 0 ? void 0 : version.version}_${goPlatform()}_${goArch()}.zip`);
+            toolPath = yield tc.downloadTool(`${releasesUrl()}/${product}/${version === null || version === void 0 ? void 0 : version.version}/${product}_${version === null || version === void 0 ? void 0 : version.version}_${goPlatform()}_${goArch()}.zip`);
         }
         catch (error) {
             core.debug(error);
@@ -267,7 +266,7 @@ function getBinary(configuredVersion) {
         // Extract the zip
         const extractedPath = yield tc.extractZip(toolPath);
         // Installs into the tool cachedir
-        const dir = yield tc.cacheDir(extractedPath, main_1.PRODUCT_NAME, version.version, os_1.default.arch());
+        const dir = yield tc.cacheDir(extractedPath, product, version.version, os_1.default.arch());
         return dir;
     });
 }
@@ -697,7 +696,7 @@ function run() {
             // download and install
             const version = core.getInput('version');
             // Download or return the cached path for the specified version
-            const path = yield install_1.getBinary(version);
+            const path = yield install_1.getBinary(exports.PRODUCT_NAME, version);
             // Make command available for future commands or actions
             core.addPath(path);
         }

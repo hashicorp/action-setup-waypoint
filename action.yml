@@ -1,11 +1,10 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'action-setup-waypoint'
+description: 'Installs the Waypoint binary for use in GitHub actions'
+author: 'HashiCorp'
 inputs:
-  version: # change this
+  version:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'The version of Waypoint to install'
 runs:
   using: 'node12'
   main: 'dist/index.js'

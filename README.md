@@ -15,13 +15,17 @@ runner can communciate with for this action to be used.
 ## Usage
 
 ```yaml
+env:
+  WAYPOINT_SERVER_TOKEN: production
+  WAYPOINT_SERVER_ADDR: waypoint.example.com:9701
+  WAYPOINT_SERVER_TLS: 1
+  WAYPOINT_SERVER_TLS_SKIP_VERIFY: 1
+
 steps:
   - uses: actions/checkout@v2
   - uses: hashicorp/actions-setup-waypoint
     with:
       version: '0.1.0'
-      server_address: ${{secrets.WAYPOINT_SERVER_ADDRESS}}
-      server_token: ${{secrets.WAYPOINT_SERVER_TOKEN}}
 - run: waypoint init
 - run: waypoint build
 ```

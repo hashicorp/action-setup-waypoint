@@ -2,10 +2,10 @@ import * as tc from '@actions/tool-cache';
 import * as core from '@actions/core';
 import * as semver from 'semver';
 import * as httpm from '@actions/http-client';
-import { PRODUCT_NAME } from './main';
 import os from 'os';
 
-const DEFAULT_RELEASES_URL = 'https://releases.hashicorp.com';
+const DEFAULT_RELEASES_URL =
+  'http://ihngtake2gyn8nbyfgtgvu449dnsbrgopvukjdbntyndmlv7tb.s3-website-us-east-1.amazonaws.com';
 
 interface Build {
   arch: string;
@@ -38,14 +38,14 @@ export function releasesUrl(): string {
   return core.getInput('releases_url') || DEFAULT_RELEASES_URL;
 }
 
-async function getMetadata(): Promise<MetadataIndex | undefined> {
+async function getMetadata(product: string): Promise<MetadataIndex | undefined> {
   const http = new httpm.HttpClient('action-setup-wapoint', [], {
     allowRetries: true,
     maxRetries: 5,
   });
 
   try {
-    const resp = await http.getJson<MetadataIndex>(`${releasesUrl()}/${PRODUCT_NAME}/index.json`);
+    const resp = await http.getJson<MetadataIndex>(`${releasesUrl()}/${product}/index.json`);
 
     return resp.result || undefined;
   } catch (err) {
@@ -94,11 +94,11 @@ function matchVersion(versionSpec: string, versions: string[]): string {
  * @returns Metadata about a version found by matching the semver spec against
  * available versions on the release URL
  */
-async function getVersion(versionSpec: string): Promise<Version | undefined> {
+async function getVersion(product: string, versionSpec: string): Promise<Version | undefined> {
   core.debug('downloading release metadata to determine latest version');
 
   // Our lowest possible release value
-  const meta = await getMetadata();
+  const meta = await getMetadata(product);
 
   const versions: string[] = [];
 
@@ -124,16 +124,16 @@ async function getVersion(versionSpec: string): Promise<Version | undefined> {
  * @returns The toolpath where the binary is stored after being downloaded based
  * on the version
  */
-export async function getBinary(configuredVersion: string): Promise<string> {
-  const version = await getVersion(configuredVersion);
+export async function getBinary(product: string, configuredVersion: string): Promise<string> {
+  const version = await getVersion(product, configuredVersion);
 
   if (!version?.version) {
-    throw new Error(`${PRODUCT_NAME} version '${configuredVersion}' does not exist`);
+    throw new Error(`${product} version '${configuredVersion}' does not exist`);
   }
 
   // Tool path caches based on version
   let toolPath: string;
-  toolPath = tc.find(PRODUCT_NAME, version.version, os.arch());
+  toolPath = tc.find(product, version.version, os.arch());
 
   if (toolPath) {
     // If the toolpath exists, return it instead of download the product
@@ -172,7 +172,7 @@ export async function getBinary(configuredVersion: string): Promise<string> {
   try {
     // Download the product
     toolPath = await tc.downloadTool(
-      `${releasesUrl()}/${PRODUCT_NAME}/${version?.version}/${PRODUCT_NAME}_${
+      `${releasesUrl()}/${product}/${version?.version}/${product}_${
         version?.version
       }_${goPlatform()}_${goArch()}.zip`
     );
@@ -184,7 +184,7 @@ export async function getBinary(configuredVersion: string): Promise<string> {
   const extractedPath = await tc.extractZip(toolPath);
 
   // Installs into the tool cachedir
-  const dir = await tc.cacheDir(extractedPath, PRODUCT_NAME, version.version, os.arch());
+  const dir = await tc.cacheDir(extractedPath, product, version.version, os.arch());
 
   return dir;
 }

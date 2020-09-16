@@ -48,7 +48,7 @@ describe('install tests', () => {
         'Content-Type': 'application/zip',
       });
 
-    await install.getBinary('0.1.0');
+    await install.getBinary(PRODUCT_NAME, '0.1.0');
 
     expect(download.isDone()).toBe(true);
   });
@@ -56,7 +56,7 @@ describe('install tests', () => {
   it('errors with a version that does not exist', async () => {
     let thrown = false;
     try {
-      await install.getBinary('0.100.0');
+      await install.getBinary(PRODUCT_NAME, '0.100.0');
     } catch {
       thrown = true;
     }
@@ -67,6 +67,6 @@ describe('install tests', () => {
     const toolPath: string = path.join(toolDir, PRODUCT_NAME, '0.1.0', os.arch());
     await io.mkdirP(toolPath);
     fs.writeFileSync(`${toolPath}.complete`, 'hello');
-    await install.getBinary('0.1.0');
+    await install.getBinary(PRODUCT_NAME, '0.1.0');
   });
 });

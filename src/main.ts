@@ -10,7 +10,7 @@ export async function run(): Promise<void> {
     const version = core.getInput('version');
 
     // Download or return the cached path for the specified version
-    const path = await getBinary(version);
+    const path = await getBinary(PRODUCT_NAME, version);
 
     // Make command available for future commands or actions
     core.addPath(path);
