@@ -30,6 +30,12 @@ steps:
 - run: waypoint build
 ```
 
+## Inputs
+
+| Input     | Description                        | Default | Required |
+| --------- | ---------------------------------- | ------- | -------- |
+| `version` | The version of Waypoint to install |         | ✔        |
+
 ## Development
 
 Install the dependencies
