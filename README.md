@@ -16,7 +16,7 @@ runner can communciate with for this action to be used.
 
 ```yaml
 env:
-  WAYPOINT_SERVER_TOKEN: production
+  WAYPOINT_SERVER_TOKEN: ${{ secrets.WAYPOINT_SERVER_TOKEN }}
   WAYPOINT_SERVER_ADDR: waypoint.example.com:9701
   WAYPOINT_SERVER_TLS: 1
   WAYPOINT_SERVER_TLS_SKIP_VERIFY: 1
