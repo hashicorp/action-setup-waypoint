@@ -7,10 +7,14 @@ Waypoint server.
 This action is a building block for using Waypoint with
 GitHub Actions. If you are interested in automatically deploying,
 annotating, and releasing with Waypoint and GitHub actions,
-see the [hashicorp/action-waypoint-deployment] action, which uses this one.
+see the experimental [hashicorp/action-waypoint](https://github.com/hashicorp/action-waypoint) action, 
+which uses this one as a dependency.
 
 Waypoint must be running in server mode on a network that the GitHub actions
 runner can communciate with for this action to be used.
+
+For more information, see the documentation on 
+integrating [GitHub Actions with Waypoint](https://waypointproject.io/docs/automating-execution/github-actions).
 
 ## Usage
 
@@ -23,7 +27,7 @@ env:
 
 steps:
   - uses: actions/checkout@v2
-  - uses: hashicorp/actions-setup-waypoint
+  - uses: hashicorp/action-setup-waypoint
     with:
       version: '0.1.0'
 - run: waypoint init
