@@ -1,7 +1,7 @@
 import * as core from '@actions/core';
 import { getBinary } from './install';
 
-export const PRODUCT_NAME = 'otto';
+export const PRODUCT_NAME = 'waypoint';
 
 export async function run(): Promise<void> {
   try {

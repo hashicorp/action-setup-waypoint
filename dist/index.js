@@ -143,7 +143,7 @@ function releasesUrl() {
 exports.releasesUrl = releasesUrl;
 function getMetadata(product) {
     return __awaiter(this, void 0, void 0, function* () {
-        const http = new httpm.HttpClient('action-setup-wapoint', [], {
+        const http = new httpm.HttpClient('action-setup-waypoint', [], {
             allowRetries: true,
             maxRetries: 5,
         });
@@ -688,7 +688,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.run = exports.PRODUCT_NAME = void 0;
 const core = __importStar(__webpack_require__(186));
 const install_1 = __webpack_require__(39);
-exports.PRODUCT_NAME = 'otto';
+exports.PRODUCT_NAME = 'waypoint';
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -5724,7 +5724,7 @@ function findAllVersions(toolName, arch) {
     return versions;
 }
 exports.findAllVersions = findAllVersions;
-function getManifestFromRepo(owner, repo, auth, branch = 'main') {
+function getManifestFromRepo(owner, repo, auth, branch = 'master') {
     return __awaiter(this, void 0, void 0, function* () {
         let releases = [];
         const treeUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`;

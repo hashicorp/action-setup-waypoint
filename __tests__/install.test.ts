@@ -43,7 +43,7 @@ describe('install tests', () => {
   it('attempts to download the tool if no version is found in the cache', async () => {
     const download = nock(install.releasesUrl())
       .persist()
-      .get(`/${PRODUCT_NAME}/0.1.0/${PRODUCT_NAME}_0.1.0_darwin_amd64.zip`)
+      .get(`/${PRODUCT_NAME}/0.1.0/${PRODUCT_NAME}_0.1.0_${os.platform()}_amd64.zip`)
       .replyWithFile(200, `${__dirname}/product.zip`, {
         'Content-Type': 'application/zip',
       });

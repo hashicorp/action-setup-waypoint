@@ -39,7 +39,7 @@ export function releasesUrl(): string {
 }
 
 async function getMetadata(product: string): Promise<MetadataIndex | undefined> {
-  const http = new httpm.HttpClient('action-setup-wapoint', [], {
+  const http = new httpm.HttpClient('action-setup-waypoint', [], {
     allowRetries: true,
     maxRetries: 5,
   });
