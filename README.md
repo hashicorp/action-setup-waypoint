@@ -30,8 +30,8 @@ steps:
   - uses: hashicorp/action-setup-waypoint
     with:
       version: '0.1.0'
-- run: waypoint init
-- run: waypoint build
+  - run: waypoint init
+  - run: waypoint build
 ```
 
 ## Inputs
