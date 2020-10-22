@@ -136,7 +136,7 @@ const core = __importStar(__webpack_require__(186));
 const semver = __importStar(__webpack_require__(383));
 const httpm = __importStar(__webpack_require__(925));
 const os_1 = __importDefault(__webpack_require__(87));
-const DEFAULT_RELEASES_URL = 'http://ihngtake2gyn8nbyfgtgvu449dnsbrgopvukjdbntyndmlv7tb.s3-website-us-east-1.amazonaws.com';
+const DEFAULT_RELEASES_URL = 'https://releases.hashicorp.com';
 function releasesUrl() {
     return core.getInput('releases_url') || DEFAULT_RELEASES_URL;
 }

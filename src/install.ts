@@ -4,8 +4,7 @@ import * as semver from 'semver';
 import * as httpm from '@actions/http-client';
 import os from 'os';
 
-const DEFAULT_RELEASES_URL =
-  'https://releases.hashicorp.com';
+const DEFAULT_RELEASES_URL = 'https://releases.hashicorp.com';
 
 interface Build {
   arch: string;
