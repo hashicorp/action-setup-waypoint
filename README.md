@@ -27,18 +27,18 @@ env:
 
 steps:
   - uses: actions/checkout@v2
-  - uses: hashicorp/action-setup-waypoint
+  - uses: hashicorp/action-setup-waypoint@main
     with:
-      version: '0.1.0'
+      version: '0.8.2'
   - run: waypoint init
   - run: waypoint build
 ```
 
 ## Inputs
 
-| Input     | Description                        | Default | Required |
-| --------- | ---------------------------------- | ------- | -------- |
-| `version` | The version of Waypoint to install |         | ✔        |
+| Input     | Description                                                              | Default | Required |
+| --------- |--------------------------------------------------------------------------| ------- | -------- |
+| `version` | The version of Waypoint to install. Check your version with `waypoint -v` |         | ✔        |
 
 ## Development
 

@@ -12,8 +12,22 @@ process.env['RUNNER_TOOL_CACHE'] = toolDir;
 process.env['RUNNER_TEMP'] = tempDir;
 
 const IS_WINDOWS = process.platform === 'win32';
-const PRODUCT_NAME = 'otto';
+const PRODUCT_NAME = 'waypoint';
+const VERSION = '0.8.2';
 const metadataIndex = require('./metadata.json');
+
+// Golang arch and platform (and as a result the product binaries) do not match
+// naming returned by the os package, so translate those
+const goArch = (arch: string): string => {
+  switch (arch) {
+    case 'x64':
+      return 'amd64';
+    case 'x32':
+      return '386';
+    default:
+      return arch;
+  }
+};
 
 describe('install tests', () => {
   beforeAll(function () {
@@ -43,12 +57,12 @@ describe('install tests', () => {
   it('attempts to download the tool if no version is found in the cache', async () => {
     const download = nock(install.releasesUrl())
       .persist()
-      .get(`/${PRODUCT_NAME}/0.1.0/${PRODUCT_NAME}_0.1.0_${os.platform()}_amd64.zip`)
+      .get(`/${PRODUCT_NAME}/${VERSION}/${PRODUCT_NAME}_${VERSION}_${os.platform()}_${goArch(os.arch())}.zip`)
       .replyWithFile(200, `${__dirname}/product.zip`, {
         'Content-Type': 'application/zip',
       });
 
-    await install.getBinary(PRODUCT_NAME, '0.1.0');
+    await install.getBinary(PRODUCT_NAME, VERSION);
 
     expect(download.isDone()).toBe(true);
   });
@@ -64,9 +78,9 @@ describe('install tests', () => {
   });
 
   it('uses versions in the cache', async () => {
-    const toolPath: string = path.join(toolDir, PRODUCT_NAME, '0.1.0', os.arch());
+    const toolPath: string = path.join(toolDir, PRODUCT_NAME, VERSION, os.arch());
     await io.mkdirP(toolPath);
     fs.writeFileSync(`${toolPath}.complete`, 'hello');
-    await install.getBinary(PRODUCT_NAME, '0.1.0');
+    await install.getBinary(PRODUCT_NAME, VERSION);
   });
 });
