@@ -176,14 +176,12 @@ export async function getBinary(product: string, configuredVersion: string): Pro
       }_${goPlatform()}_${goArch()}.zip`
     );
   } catch (error) {
-    core.debug(error);
+    core.debug(error as string);
   }
 
   // Extract the zip
   const extractedPath = await tc.extractZip(toolPath);
 
   // Installs into the tool cachedir
-  const dir = await tc.cacheDir(extractedPath, product, version.version, os.arch());
-
-  return dir;
+  return await tc.cacheDir(extractedPath, product, version.version, os.arch());
 }
