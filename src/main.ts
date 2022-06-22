@@ -15,7 +15,18 @@ export async function run(): Promise<void> {
     // Make command available for future commands or actions
     core.addPath(path);
   } catch (error) {
-    core.setFailed(error.message);
+    if (!error || !(error instanceof Error)) {
+      // eslint-disable-next-line i18n-text/no-en
+      core.setFailed('Invalid error');
+      return;
+    }
+
+    if ('message' in error) {
+      core.setFailed(error?.message);
+      return;
+    }
+
+    core.setFailed(error);
   }
 }
 
