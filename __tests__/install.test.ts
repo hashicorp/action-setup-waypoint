@@ -32,7 +32,7 @@ const goArch = (arch: string): string => {
 describe('install tests', () => {
   beforeAll(function () {
     // Mock out the metadata request for all tests
-    nock(install.releasesUrl()).persist().get(`/${PRODUCT_NAME}/index.json`).reply(200, metadataIndex);
+    nock(install.releasesUrl()).persist().get(`/v1/releases/${PRODUCT_NAME}/0.8.2`).reply(200, metadataIndex);
     // We don't want any real http requests in the tests
     nock.disableNetConnect();
   });
@@ -55,7 +55,7 @@ describe('install tests', () => {
   });
 
   it('attempts to download the tool if no version is found in the cache', async () => {
-    const download = nock(install.releasesUrl())
+    const download = nock('https://releases.hashicorp.com')
       .persist()
       .get(`/${PRODUCT_NAME}/${VERSION}/${PRODUCT_NAME}_${VERSION}_${os.platform()}_${goArch(os.arch())}.zip`)
       .replyWithFile(200, `${__dirname}/product.zip`, {

@@ -1,10 +1,9 @@
 import * as tc from '@actions/tool-cache';
 import * as core from '@actions/core';
-import * as semver from 'semver';
 import * as httpm from '@actions/http-client';
 import os from 'os';
 
-const DEFAULT_RELEASES_URL = 'https://releases.hashicorp.com';
+const DEFAULT_RELEASES_URL = 'https://api.releases.hashicorp.com';
 
 interface Build {
   arch: string;
@@ -24,97 +23,23 @@ interface Version {
   builds: Build[];
 }
 
-interface MetadataIndex {
-  name: string;
-  versions: Versions;
-}
-
-interface Versions {
-  [version: string]: Version;
-}
-
 export function releasesUrl(): string {
   return core.getInput('releases_url') || DEFAULT_RELEASES_URL;
 }
 
-async function getMetadata(product: string): Promise<MetadataIndex | undefined> {
+async function getMetadata(product: string, version: string): Promise<Version | undefined> {
   const http = new httpm.HttpClient('action-setup-waypoint', [], {
     allowRetries: true,
     maxRetries: 5,
   });
 
   try {
-    const resp = await http.getJson<MetadataIndex>(`${releasesUrl()}/${product}/index.json`);
+    const resp = await http.getJson<Version>(`${releasesUrl()}/v1/releases/${product}/${version}`);
 
     return resp.result || undefined;
   } catch (err) {
     throw new Error(`Failed to fetch version metadata file ${err}`);
   }
-}
-
-/**
- * @param versionSpec The version defined by a user in a semver compatible format
- * @param versions A list of available versions for the product
- *
- * @returns The most relevant version based on the supplied version selector
- */
-function matchVersion(versionSpec: string, versions: string[]): string {
-  // from @actions/tool-cache
-  let version = '';
-
-  versions = versions.sort((a, b) => {
-    if (semver.gt(a, b)) {
-      return 1;
-    }
-    return -1;
-  });
-
-  for (let i = versions.length - 1; i >= 0; i--) {
-    const potential: string = versions[i];
-    const satisfied: boolean = semver.satisfies(potential, versionSpec);
-    if (satisfied) {
-      version = potential;
-      break;
-    }
-  }
-
-  if (version) {
-    core.debug(`found version match: ${version}`);
-  } else {
-    core.debug(`version match not found for ${version}`);
-  }
-
-  return version;
-}
-
-/**
- * @param versionSpec The version defined by a user in a semver compatible format
- *
- * @returns Metadata about a version found by matching the semver spec against
- * available versions on the release URL
- */
-async function getVersion(product: string, versionSpec: string): Promise<Version | undefined> {
-  core.debug('downloading release metadata to determine latest version');
-
-  // Our lowest possible release value
-  const meta = await getMetadata(product);
-
-  const versions: string[] = [];
-
-  if (!meta?.versions) {
-    core.setFailed(`response does not contain versions. ${meta?.versions}`);
-    return;
-  }
-
-  // Populate versions array
-  for (const version of Object.values(meta.versions)) {
-    versions.push(version.version);
-  }
-
-  // Match a version based on the version spec
-  const version = matchVersion(versionSpec, versions);
-
-  return meta.versions[version];
 }
 
 /**
@@ -124,15 +49,15 @@ async function getVersion(product: string, versionSpec: string): Promise<Version
  * on the version
  */
 export async function getBinary(product: string, configuredVersion: string): Promise<string> {
-  const version = await getVersion(product, configuredVersion);
+  const meta = await getMetadata(product, configuredVersion);
 
-  if (!version?.version) {
+  if (!meta?.version) {
     throw new Error(`${product} version '${configuredVersion}' does not exist`);
   }
 
   // Tool path caches based on version
   let toolPath: string;
-  toolPath = tc.find(product, version.version, os.arch());
+  toolPath = tc.find(product, meta.version, os.arch());
 
   if (toolPath) {
     // If the toolpath exists, return it instead of download the product
@@ -166,22 +91,26 @@ export async function getBinary(product: string, configuredVersion: string): Pro
     }
   };
 
-  core.info(`downloading ${version.version} from ${releasesUrl()}`);
+  const matchingBuild: Build | undefined = meta.builds.find((build: Build) => {
+    return build.os === goPlatform() && build.arch === goArch();
+  });
 
-  try {
-    // Download the product
-    toolPath = await tc.downloadTool(
-      `${releasesUrl()}/${product}/${version?.version}/${product}_${
-        version?.version
-      }_${goPlatform()}_${goArch()}.zip`
-    );
-  } catch (error) {
-    core.debug(error as string);
+  if (matchingBuild) {
+    core.info(`downloading ${meta.version} from ${matchingBuild.url}`);
+
+    try {
+      // Download the product
+      toolPath = await tc.downloadTool(matchingBuild.url);
+    } catch (error) {
+      core.debug(error as string);
+    }
+
+    // Extract the zip
+    const extractedPath = await tc.extractZip(toolPath);
+
+    // Installs into the tool cachedir
+    return await tc.cacheDir(extractedPath, product, meta.version, os.arch());
   }
 
-  // Extract the zip
-  const extractedPath = await tc.extractZip(toolPath);
-
-  // Installs into the tool cachedir
-  return await tc.cacheDir(extractedPath, product, version.version, os.arch());
+  throw new Error(`${product} version '${configuredVersion}' does not have a matching build for '${goPlatform()}_${goArch()}'`);
 }
